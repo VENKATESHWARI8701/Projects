@@ -1,6 +1,6 @@
 # Knowledge Base Application
 
-This project consists of a React frontend and Express backend for managing a knowledge base.
+This project consists of a React frontend and Express backend for managing a knowledge base with AI-powered document Q&A capabilities.
 
 ## Project Structure
 
@@ -13,13 +13,29 @@ qa-web-app/
 
 ## Setup
 
-1. Install dependencies for both frontend and backend:
+1. Create a `.env` file in the `backend` directory with the following variables:
+
+```
+GOOGLE_API_KEY=your_google_gemini_api_key
+PINECONE_API_KEY=your_pinecone_api_key
+```
+
+2. **Google Gemini API Key**: 
+   - Visit https://aistudio.google.com/app/apikey
+   - Sign in with your Google account
+   - Click "Create API Key" and copy the generated key
+
+3. **Pinecone API Key and Index**:
+   - Visit https://app.pinecone.io/ and create an account
+   - In API Keys, create a key and use that.
+
+4. Install dependencies for both frontend and backend:
 
 ```bash
 npm run install-all
 ```
 
-2. Run both frontend and backend concurrently:
+5. Run both frontend and backend concurrently:
 
 ```bash
 npm run dev
@@ -28,19 +44,15 @@ npm run dev
 ## Frontend
 
 The frontend is a React application that allows users to:
-- Upload PDF files to the knowledge base
+- Upload documents (PDF, DOC/DOCX, HTML/HTM) to the knowledge base
 - View all files in the knowledge base
 - Delete files from the knowledge base
+- Chat with an AI assistant that can answer questions based on the uploaded documents
 
 ## Backend
 
 The backend is an Express server that:
 - Handles file uploads
-- Extracts text from PDF files
-- Provides API endpoints for managing files
-
-## API Endpoints
-
-- `POST /api/upload` - Upload files
-- `GET /api/files` - Get all files
-- `DELETE /api/files/:id` - Delete a file by ID
+- Extracts text from multiple file formats (PDF, DOC/DOCX, HTML/HTM)
+- Embeds document content using Google's Gemini API
+- Stores embeddings in Pinecone vector database
