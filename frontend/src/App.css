@@ -1,0 +1,89 @@
+:root {
+  --primary-color: #3a86ff;
+  --secondary-color: #8338ec;
+  --background-color: #f8f9fa;
+  --card-background: #ffffff;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --success-color: #38b000;
+  --error-color: #d90429;
+  --border-radius: 12px;
+  --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --transition: all 0.3s ease;
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-primary);
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+  color: white;
+  padding: 0.5rem 0;
+}
+
+.app-title {
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.nav-tabs .MuiTab-root {
+  min-width: 120px;
+  transition: var(--transition);
+  border-radius: 4px 4px 0 0;
+  margin: 0 4px;
+}
+
+.nav-tabs .MuiTab-root:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem 0;
+  max-width: 1400px;
+}
+
+.content-container {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+  min-height: 80vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
