@@ -1,5 +1,6 @@
-const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api` ?? 'http://localhost:5000/api';
-
+const API_URL = process.env.REACT_APP_BACKEND_URL
+    ? `${process.env.REACT_APP_BACKEND_URL}/api`
+    : 'http://localhost:5000/api';
 export const chatWithLLM = async (question, sessionId = 'api-user') => {
     try {
         const response = await fetch(`${API_URL}/ask`, {
