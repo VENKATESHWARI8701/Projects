@@ -4,7 +4,7 @@ const { Pinecone } = require("@pinecone-database/pinecone");
 const { GoogleGenerativeAIEmbeddings } = require("@langchain/google-genai");
 
 const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
-const index = pinecone.Index(process.env.PINECONE_INDEX_NAME);
+const index = pinecone.Index(process.env.PINECONE_INDEX_NAME ?? "langchain-project-index");
 
 async function createIndexIfNotExists(indexName) {
     try {
