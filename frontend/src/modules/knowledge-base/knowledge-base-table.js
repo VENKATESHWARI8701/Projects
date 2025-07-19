@@ -23,7 +23,10 @@ const KnowledgeBaseTable = () => {
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
-
+    const API_URL = process.env.REACT_APP_BACKEND_URL
+        ? `${process.env.REACT_APP_BACKEND_URL}/api`
+        : 'http://localhost:5000/api';
+    console.log("API URL", API_URL);
     const getFileIcon = (fileName) => {
         const extension = fileName.toLowerCase().split('.').pop();
 
