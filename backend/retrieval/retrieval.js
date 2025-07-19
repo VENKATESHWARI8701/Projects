@@ -6,7 +6,8 @@ require('dotenv').config();
 
 // Set up Pinecone client
 const pinecone = new Pinecone();
-const index = pinecone.Index(process.env.PINECONE_INDEX_NAME);
+const indexName = process.env.PINECONE_INDEX_NAME || "langchain-project-index";
+const index = pinecone.Index(indexName);
 
 // Initialize memory storage for chat history
 const chatMemories = {};
