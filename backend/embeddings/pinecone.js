@@ -8,16 +8,17 @@ const index = pinecone.Index(process.env.PINECONE_INDEX_NAME);
 
 async function createIndexIfNotExists() {
     try {
+        const indexName = "langchain-project-index";
         const indexes = await pinecone.listIndexes();
         console.log("Available indexes", indexes.indexes)
         const indexExists = indexes.indexes.some(
-            (pineconeIdx) => pineconeIdx.name === process.env.PINECONE_INDEX_NAME
+            (pineconeIdx) => pineconeIdx.name === indexName
         );
 
         if (!indexExists) {
             console.log(`Creating index "${index}"...`);
             await pinecone.createIndex({
-                name: indexes?.indexes?.[0]?.['name'] ?? "langchain-project-index",
+                name: indexName,
                 dimension: 768,
                 metric: "cosine",
                 spec: {
