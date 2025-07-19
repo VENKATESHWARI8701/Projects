@@ -16,6 +16,12 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { Delete as DeleteIcon, PictureAsPdf as PdfIcon, Close as CloseIcon, Description as DocIcon, Code as HtmlIcon } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
 
+// This component provides a file upload interface for a knowledge base system
+// Props:
+// - open: boolean - Controls dialog visibility
+// - onClose: function - Handler for closing the dialog
+// - onUpload: function - Handler for processing selected files
+
 const KnowledgeBaseForm = ({ open, onClose, onUpload }) => {
     const [selectedFiles, setSelectedFiles] = useState([]);
 
@@ -30,6 +36,7 @@ const KnowledgeBaseForm = ({ open, onClose, onUpload }) => {
                 return <DocIcon color="primary" fontSize="small" />;
             case 'html':
             case 'htm':
+            case 'txt':
                 return <HtmlIcon color="success" fontSize="small" />;
             default:
                 return <PdfIcon color="action" fontSize="small" />;
@@ -41,14 +48,17 @@ const KnowledgeBaseForm = ({ open, onClose, onUpload }) => {
             'application/pdf': ['.pdf'],
             'application/msword': ['.doc'],
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-            'text/html': ['.html', '.htm']
+            'text/html': ['.html', '.htm'],
+            'text/plain': ['.txt']
         },
         multiple: true,
         onDrop: (acceptedFiles) => {
-            console.log(acceptedFiles)
-            console.log(selectedFiles);
             setSelectedFiles(prevFile => [...prevFile, ...acceptedFiles])
         },
+        onDropRejected: (rejectedFiles) => {
+            const unsupportedFiles = rejectedFiles.map(rej => rej.file.name).join(', ');
+            alert(`Unsupported file(s): ${unsupportedFiles}`);
+        }
     });
 
     const handleUpload = () => {
@@ -70,12 +80,12 @@ const KnowledgeBaseForm = ({ open, onClose, onUpload }) => {
             onClose={onClose}
             maxWidth="sm"
             fullWidth
-            PaperProps={{
+            slotProps={{
                 elevation: 0,
                 sx: { borderRadius: 3 }
             }}
-            TransitionComponent={Slide}
-            TransitionProps={{ direction: 'up' }}
+            slots={{ transition: Slide }}
+            transitionProps={{ direction: 'up' }}
         >
             <DialogTitle sx={{ pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Typography variant="h6" fontWeight="600" color="primary">
@@ -105,7 +115,7 @@ const KnowledgeBaseForm = ({ open, onClose, onUpload }) => {
                             transition: 'all 0.2s ease',
                             '&:hover': {
                                 borderColor: 'primary.main',
-                                bgcolor: 'rgba(58, 134, 255, 0.05)'
+                                bgcolor: 'rgba(22, 25, 28, 0.05)'
                             }
                         }}
                     >
@@ -118,24 +128,15 @@ const KnowledgeBaseForm = ({ open, onClose, onUpload }) => {
                             or click to browse your files
                         </Typography>
                         <Box sx={{ mt: 2, display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap' }}>
-                            <Chip
-                                label="PDF"
-                                size="small"
-                                color="primary"
-                                variant="outlined"
-                            />
-                            <Chip
-                                label="DOC/DOCX"
-                                size="small"
-                                color="primary"
-                                variant="outlined"
-                            />
-                            <Chip
-                                label="HTML/HTM"
-                                size="small"
-                                color="primary"
-                                variant="outlined"
-                            />
+                            {['PDF', 'DOC/DOCX', 'HTML/HTM', 'TEXT'].map((label) => (
+                                <Chip
+                                    key={label}
+                                    label={label}
+                                    size="small"
+                                    color="primary"
+                                    variant="outlined"
+                                />
+                            ))}
                         </Box>
                     </Paper>
                 </Fade>

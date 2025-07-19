@@ -67,26 +67,5 @@ export const askQuestion = (question, onChunk, onComplete, onError) => {
   };
 };
 
-// Clear chat history
-export const clearChatHistory = (onSuccess, onError) => {
-  // Connect if not already connected
-  if (!socket.connected) {
-    socket.connect();
-  }
-
-  // Set up event listener for the response
-  socket.on('history-cleared', ({ success }) => {
-    if (success && onSuccess) onSuccess();
-    if (!success && onError) onError(new Error('Failed to clear history'));
-  });
-
-  // Send the clear history request
-  socket.emit('clear-history');
-
-  // Return a cleanup function to remove listeners
-  return () => {
-    socket.off('history-cleared');
-  };
-};
 
 export default socket;
