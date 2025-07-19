@@ -17,9 +17,8 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.REACT_APP_FRONTEND_URL ?? "http://localhost:4000",
+    origin: process.env.REACT_APP_FRONTEND_URL || "http://localhost:4000",
     methods: ["GET", "POST"],
-    allowedHeaders: ["my-custom-header"],
     credentials: true
   },
   transports: ['polling', 'websocket']
@@ -35,31 +34,6 @@ const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
-
-// // Configure multer storage
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, uploadsDir);
-//   },
-//   filename: function (req, file, cb) {
-//     // Create unique filename with original extension
-//     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-//     const ext = path.extname(file.originalname);
-//     cb(null, file.fieldname + '-' + uniqueSuffix + ext);
-//   }
-// });
-
-// const upload = multer({
-//   storage: storage,
-//   fileFilter: function (req, file, cb) {
-//     // Accept only PDF files
-//     if (file.mimetype === 'application/pdf') {
-//       cb(null, true);
-//     } else {
-//       cb(new Error('Only PDF files are allowed!'), false);
-//     }
-//   }
-// });
 
 // File upload endpoint
 app.post('/api/upload', upload.array('files'), async (req, res) => {
