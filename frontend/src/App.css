@@ -17,12 +17,6 @@ body {
   color: var(--text-primary);
 }
 
-.app-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
 .app-header {
   background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
   color: white;
@@ -46,9 +40,9 @@ body {
 }
 
 .main-content {
-  flex: 1;
-  padding: 2rem 0;
-  max-width: 1400px;
+  /* flex: 1; */
+  padding: 0.5rem 0;
+  /* max-width: 1400px; */
 }
 
 .content-container {

@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { addMessage, updateLastAiMessage, clearMessages } from "../../redux/chat-history-slice";
 import {
   Box,
   TextField,
@@ -22,10 +24,10 @@ import PersonIcon from '@mui/icons-material/Person';
 import ReactMarkDown from "react-markdown";
 import { connectSocket, askQuestion, disconnectSocket, clearChatHistory } from "../../services/socket";
 
+// This component provides the interface to chat with the Model
 const ChatInterface = () => {
-  const [messages, setMessages] = useState([
-    { role: "ai", text: "Hi! Ask me anything from your Knowledge base." }
-  ]);
+  const messages = useSelector(state => state.chat.messages);
+  const dispatch = useDispatch();
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentResponse, setCurrentResponse] = useState("");
@@ -49,9 +51,8 @@ const ChatInterface = () => {
   const handleSend = async () => {
     if (!input.trim()) return;
     fullMessageRef.current = "";
-    // Add user message to messages
     const userMessage = { role: "user", text: input };
-    setMessages((prev) => [...prev, userMessage]);
+    dispatch(addMessage(userMessage));
 
     // Clear input and set loading
     setInput("");
@@ -59,25 +60,19 @@ const ChatInterface = () => {
     setCurrentResponse("");
 
     // Add an empty assistant message that will be updated with streaming content
-    setMessages((prev) => [...prev, { role: "ai", text: "" }]);
+    dispatch(addMessage({ role: "ai", text: "" }));
 
     // Ask question and handle streaming response
     askQuestion(
       input,
       // On chunk received
       (chunk) => {
-        // console.log(chunk);
         if (!chunk || chunk === fullMessageRef.current.slice(-chunk.length)) return;
 
         fullMessageRef.current += chunk;
 
         setCurrentResponse(fullMessageRef.current);
-        console.log(fullMessageRef.current)
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1].text = fullMessageRef.current;
-          return updated;
-        });
+        dispatch(updateLastAiMessage(fullMessageRef.current));
       },
       // On complete
       () => {
@@ -87,33 +82,14 @@ const ChatInterface = () => {
       (error) => {
         console.error('Error from LLM:', error);
         setIsLoading(false);
-        setMessages((prev) => {
-          const newMessages = [...prev];
-          newMessages[newMessages.length - 1].text = "Error: Failed to get response from the model.";
-          return newMessages;
-        });
+        dispatch(updateLastAiMessage("Error: Failed to get response from the model."));
       }
     );
   };
 
-  const handleClearHistory = () => {
-    clearChatHistory(
-      // On success
-      () => {
-        setMessages([]);
-        setCurrentResponse('');
-      },
-      // On error
-      (error) => {
-        console.error('Error clearing chat history:', error);
-      }
-    );
-  };
-
-  console.log("currentResponse", currentResponse);
   return (
-    <Box sx={{ p: 2 }} className="fade-in">
-      <Card elevation={0} sx={{ mb: 4, borderRadius: 3, bgcolor: 'rgba(58, 134, 255, 0.05)' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', p: 1 }}>
+      <Card elevation={0} sx={{ mb: 1, borderRadius: 3, bgcolor: 'rgba(4, 55, 138, 0.05)' }}>
         <CardContent sx={{ p: 3 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Box>
@@ -124,52 +100,33 @@ const ChatInterface = () => {
                 Ask questions about your uploaded documents
               </Typography>
             </Box>
-            <Tooltip title="Clear chat history">
-              <IconButton
-                onClick={handleClearHistory}
-                color="primary"
-                sx={{
-                  bgcolor: 'rgba(58, 134, 255, 0.1)',
-                  '&:hover': { bgcolor: 'rgba(58, 134, 255, 0.2)' }
-                }}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Tooltip>
           </Box>
         </CardContent>
       </Card>
 
       <Box
         sx={{
-          height: "60vh",
-          display: "flex",
-          flexDirection: "column",
-          borderRadius: 3,
-          overflow: "hidden",
+          height: '65vh',
+          display: 'flex',
+          flexDirection: 'column',
           border: '1px solid rgba(0, 0, 0, 0.08)',
-          bgcolor: 'background.paper',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)'
+          overflow: 'hidden'
         }}
       >
         <Box
           sx={{
             flex: 1,
-            p: 3,
-            overflowY: "auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            bgcolor: 'rgba(0, 0, 0, 0.01)'
+            p: 2,
+            overflowY: 'auto',
           }}
         >
           {messages.length === 0 && (
             <Box sx={{
+              flex: 1,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              height: '100%',
               opacity: 0.7
             }}>
               <SmartToyIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2, opacity: 0.6 }} />
@@ -232,13 +189,14 @@ const ChatInterface = () => {
         </Box>
 
         <Divider />
+
+        {/* Input section */}
         <Box
           sx={{
             p: 2,
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            bgcolor: 'background.paper'
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
           }}
         >
           <TextField
@@ -255,24 +213,21 @@ const ChatInterface = () => {
             }}
             multiline
             maxRows={3}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    color="primary"
-                    onClick={handleSend}
-                    disabled={isLoading || !input.trim()}
-                    sx={{
-                      bgcolor: input.trim() ? 'primary.main' : 'rgba(0, 0, 0, 0.08)',
-                      color: 'white',
-                      '&:hover': { bgcolor: 'primary.dark' },
-                      '&.Mui-disabled': { bgcolor: 'rgba(0, 0, 0, 0.08)', color: 'rgba(0, 0, 0, 0.26)' }
-                    }}
-                  >
-                    {isLoading ? <CircularProgress size={24} color="inherit" /> : <SendIcon />}
-                  </IconButton>
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      color="primary"
+                      size="large"
+                      onClick={handleSend}
+                      disabled={isLoading || !input.trim()}
+                    >
+                      {isLoading ? <CircularProgress size={24} color="inherit" /> : <SendIcon />}
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }
             }}
             sx={{
               '& .MuiOutlinedInput-root': {
@@ -283,22 +238,9 @@ const ChatInterface = () => {
           />
         </Box>
       </Box>
-
-      {/* {messages.length > 0 && (
-        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-          <Chip 
-            label="Clear conversation history" 
-            color="primary" 
-            variant="outlined" 
-            onClick={handleClearHistory}
-            onDelete={handleClearHistory}
-            deleteIcon={<DeleteIcon />}
-            sx={{ borderRadius: 3 }}
-          />
-        </Box>
-      )} */}
     </Box>
   );
+
 };
 
 export default ChatInterface;

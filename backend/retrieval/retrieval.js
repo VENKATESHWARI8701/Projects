@@ -26,12 +26,11 @@ const getAnswerFromModel = async (question, streaming = false, sessionId = 'defa
     });
 
     const queryEmbedding = await embeddings.embedQuery(question);
-    console.log("Query embeded:", queryEmbedding);
 
     // 2. Perform similarity search on Pinecone
     const pineconeResponse = await index.query({
         vector: queryEmbedding,
-        topK: 5,
+        topK: 10,
         includeMetadata: true
     });
 
@@ -43,9 +42,10 @@ const getAnswerFromModel = async (question, streaming = false, sessionId = 'defa
     // 3. Get chat history
     const chatHistory = await chatMemories[sessionId].loadMemoryVariables({});
     const previousMessages = chatHistory.history || '';
-
+    console.log("Previous messages:", previousMessages);
     // 4. Construct prompt with retrieved context and chat history
-    const prompt = ` You are an AI assistant. You can answer any question. Use the following context and conversation history to answer the user's question.
+    const prompt = ` You are an AI assistant. You can answer any question. Use the following context and conversation history to answer the user's question. 
+    If you not understand the question then ask for clarification. Don't try to make up an answer.
 
         Context:
         ${relevantChunks || 'No relevant context found.'}
@@ -92,13 +92,5 @@ const saveConversation = async (sessionId, question, answer) => {
     );
 };
 
-// Function to clear chat history for a session
-const clearChatHistory = async (sessionId = 'default') => {
-    if (chatMemories[sessionId]) {
-        delete chatMemories[sessionId];
-        return true;
-    }
-    return false;
-};
 
-module.exports = { getAnswerFromModel, clearChatHistory };
+module.exports = { getAnswerFromModel };

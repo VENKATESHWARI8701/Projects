@@ -10,23 +10,28 @@ import {
     Chip,
     Tooltip,
     LinearProgress,
-    Fade
+    Fade,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle
 } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon, Refresh as RefreshIcon, PictureAsPdf as PdfIcon, Description as DocIcon, Code as HtmlIcon, InsertDriveFile as FileIcon } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 import KnowledgeBaseForm from './knowledge-base-form';
 import { uploadFiles, getFiles, deleteFile } from '../../services/knowledge-base-api-service';
 
+
+// Table which shows the uploaded files
 const KnowledgeBaseTable = () => {
 
     const [openDialog, setOpenDialog] = useState(false);
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
-    const API_URL = process.env.REACT_APP_BACKEND_URL
-        ? `${process.env.REACT_APP_BACKEND_URL}/api`
-        : 'http://localhost:5000/api';
-    console.log("API URL", API_URL);
+    const [currentUploadingFile, setCurrentUploadingFile] = useState('');
+    const [deleteConfirmation, setDeleteConfirmation] = useState({ open: false, file: null });
+
     const getFileIcon = (fileName) => {
         const extension = fileName.toLowerCase().split('.').pop();
 
@@ -38,6 +43,7 @@ const KnowledgeBaseTable = () => {
                 return <DocIcon color="primary" fontSize="small" />;
             case 'html':
             case 'htm':
+            case 'txt':
                 return <HtmlIcon color="success" fontSize="small" />;
             default:
                 return <FileIcon color="action" fontSize="small" />;
@@ -69,28 +75,42 @@ const KnowledgeBaseTable = () => {
     const handleUpload = async ({ files: uploadedFiles }) => {
         try {
             setLoading(true);
+            setCurrentUploadingFile(uploadedFiles.map(file => file.name).join(', '))
             await uploadFiles(uploadedFiles);
             showAlert('Files uploaded successfully', 'success');
-            fetchFiles(); // Refresh the file list
+            fetchFiles();
         } catch (error) {
+            setCurrentUploadingFile('');
             showAlert('Failed to upload files', 'error');
         } finally {
+            setCurrentUploadingFile('');
             setLoading(false);
         }
     };
 
-    const handleDelete = async (file) => {
+    const confirmDelete = (file) => {
+        setDeleteConfirmation({ open: true, file });
+    };
+
+    const handleDeleteConfirm = async () => {
+        const file = deleteConfirmation.file;
+        if (!file) return;
+
         try {
-            console.log(file);
             setLoading(true);
             await deleteFile(file.title);
             showAlert('File deleted successfully', 'success');
-            fetchFiles(); // Refresh the file list
+            fetchFiles();
         } catch (error) {
             showAlert('Failed to delete file', 'error');
         } finally {
             setLoading(false);
+            setDeleteConfirmation({ open: false, file: null });
         }
+    };
+
+    const handleDeleteCancel = () => {
+        setDeleteConfirmation({ open: false, file: null });
     };
 
     const showAlert = (message, severity) => {
@@ -102,7 +122,7 @@ const KnowledgeBaseTable = () => {
     };
 
     return (
-        <Box sx={{ p: 4 }} className="fade-in">
+        <Box sx={{ p: 1 }} className="fade-in">
             <Card elevation={0} sx={{ mb: 4, borderRadius: 3, bgcolor: 'rgba(58, 134, 255, 0.05)' }}>
                 <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -132,6 +152,7 @@ const KnowledgeBaseTable = () => {
                                 disableElevation
                                 startIcon={<AddIcon />}
                                 onClick={() => setOpenDialog(true)}
+                                disabled={loading}
                                 sx={{
                                     borderRadius: 2,
                                     px: 3,
@@ -145,6 +166,15 @@ const KnowledgeBaseTable = () => {
                 </CardContent>
             </Card>
 
+            {loading && (
+                <Box sx={{ mb: 2 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                        <Typography variant="body2" color="primary">
+                            Uploading: {currentUploadingFile}
+                        </Typography>
+                    </Box>
+                </Box>
+            )}
             {loading && <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />}
 
             <Fade in={true} timeout={500}>
@@ -192,7 +222,7 @@ const KnowledgeBaseTable = () => {
                                         <Tooltip title="Delete file">
                                             <IconButton
                                                 color="error"
-                                                onClick={() => handleDelete(file)}
+                                                onClick={() => confirmDelete(file)}
                                                 size="small"
                                                 sx={{
                                                     '&:hover': {
@@ -219,6 +249,7 @@ const KnowledgeBaseTable = () => {
                                                 onClick={() => setOpenDialog(true)}
                                                 startIcon={<AddIcon />}
                                                 sx={{ mt: 1 }}
+                                                disabled={loading}
                                             >
                                                 Upload your first file
                                             </Button>
@@ -254,6 +285,43 @@ const KnowledgeBaseTable = () => {
                     {alert.message}
                 </Alert>
             </Snackbar>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteConfirmation.open}
+                onClose={handleDeleteCancel}
+                slotProps={{
+                    elevation: 0,
+                    sx: { borderRadius: 2 }
+                }}
+            >
+                <DialogTitle sx={{ fontWeight: 600 }}>
+                    Confirm Delete
+                </DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1">
+                        Are you sure you want to delete "{deleteConfirmation.file?.title}"? This action cannot be undone.
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ p: 2 }}>
+                    <Button
+                        onClick={handleDeleteCancel}
+                        color="inherit"
+                        sx={{ borderRadius: 2 }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleDeleteConfirm}
+                        color="error"
+                        variant="contained"
+                        disableElevation
+                        sx={{ borderRadius: 2 }}
+                    >
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

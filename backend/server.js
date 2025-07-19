@@ -113,8 +113,7 @@ app.delete('/api/files/:id', async (req, res) => {
 
 app.post("/api/ask", async (req, res) => {
   const { question, sessionId = 'api-user' } = req?.body;
-  console.log(req.body);
-  
+
   try {
     // For non-streaming responses with chat history
     const answer = await getAnswerFromModel(question, false, sessionId);
@@ -123,12 +122,6 @@ app.post("/api/ask", async (req, res) => {
     console.error('Error getting answer:', error);
     return res.status(500).json({ error: error.message || 'Unknown error occurred' });
   }
-})
-
-app.post("/api/clear-history", async (req, res) => {
-  const { sessionId = 'api-user' } = req.body;
-  const cleared = await clearChatHistory(sessionId);
-  return res.json({ success: cleared });
 })
 
 // Handle WebSocket connections
@@ -141,42 +134,29 @@ io.engine.on('connection_error', (err) => {
 
 io.on('connection', (socket) => {
   console.log('Client connected with ID:', socket.id);
-  console.log('Transport type:', socket.conn.transport.name);
-  
+
   // Use socket ID as session ID for chat history
   const sessionId = socket.id;
-  
+
   socket.on('ask-question', async (question) => {
     console.log('Question received:', question);
-    
+
     try {
       // Get streaming response from the LLM model with session ID
       const stream = await getAnswerFromModel(question, true, sessionId);
-      console.log(stream);
       // Process each chunk from the stream
       for await (const chunk of stream) {
         if (chunk.content) {
           socket.emit('llm-response-chunk', { chunk: chunk.content });
         }
       }
-      
+
       // Signal that the response is complete
       socket.emit('llm-response-complete');
     } catch (error) {
       console.error('Error streaming response:', error);
       socket.emit('llm-error', { error: error.message || 'Unknown error occurred' });
     }
-  });
-  
-  socket.on('clear-history', async () => {
-    const cleared = await clearChatHistory(sessionId);
-    socket.emit('history-cleared', { success: cleared });
-  });
-  
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-    // Optionally clear chat history when user disconnects
-    // clearChatHistory(sessionId);
   });
 });
 
