@@ -4,18 +4,20 @@ const { Pinecone } = require("@pinecone-database/pinecone");
 const { GoogleGenerativeAIEmbeddings } = require("@langchain/google-genai");
 
 const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
-const index = pinecone.Index(process.env.PINECONE_INDEX_NAME ?? "langchain-project-index");
+const indexName = process.env.PINECONE_INDEX_NAME || "langchain-project-index";
+const index = pinecone.Index(indexName);
 
 async function createIndexIfNotExists(indexName) {
     try {
         const indexes = await pinecone.listIndexes();
-        console.log("Available indexes", indexes.indexes)
+        console.log("Available indexes", indexes.indexes);
+
         const indexExists = indexes.indexes.some(
             (pineconeIdx) => pineconeIdx.name === indexName
         );
 
         if (!indexExists) {
-            console.log(`Creating index "${index}"...`);
+            console.log(`Creating index "${indexName}"...`);
             await pinecone.createIndex({
                 name: indexName,
                 dimension: 768,
@@ -23,13 +25,13 @@ async function createIndexIfNotExists(indexName) {
                 spec: {
                     serverless: {
                         cloud: "aws",
-                        region: process.env.PINECONE_ENVIRONMENT ?? "us-east-1"
+                        region: process.env.PINECONE_ENVIRONMENT || "us-east-1"
                     }
                 }
             });
-            console.log(`Index: langchain-project-index created.`);
+            console.log(`Index "${indexName}" created.`);
         } else {
-            console.log(`Index: langchain-project-index already exists.`);
+            console.log(`Index "${indexName}" already exists.`);
         }
     } catch (error) {
         console.error("Error creating Pinecone index:", error);
@@ -43,7 +45,6 @@ const embedAndStore = async (chunks, metadata = {}) => {
         title: "Embeddings for " + metadata.title
     });
 
-    const indexName = "langchain-project-index";
     await createIndexIfNotExists(indexName);
 
     await PineconeStore.fromTexts(
@@ -55,7 +56,7 @@ const embedAndStore = async (chunks, metadata = {}) => {
 };
 
 const deleteFromPinecone = async (namespace) => {
-    console.log("namespace here", namespace);
+    console.log("Deleting namespace:", namespace);
     await index._deleteAll({ namespace });
 };
 

@@ -12,6 +12,7 @@ const index = pinecone.Index(process.env.PINECONE_INDEX_NAME);
 const chatMemories = {};
 
 const getAnswerFromModel = async (question, streaming = false, sessionId = 'default') => {
+    console.log("Getting answer");
     // Initialize memory for this session if it doesn't exist
     if (!chatMemories[sessionId]) {
         chatMemories[sessionId] = new BufferMemory();
@@ -24,6 +25,7 @@ const getAnswerFromModel = async (question, streaming = false, sessionId = 'defa
     });
 
     const queryEmbedding = await embeddings.embedQuery(question);
+    console.log("Query embeded:", queryEmbedding);
 
     // 2. Perform similarity search on Pinecone
     const pineconeResponse = await index.query({
@@ -59,6 +61,7 @@ const getAnswerFromModel = async (question, streaming = false, sessionId = 'defa
         temperature: 0,
     });
 
+    console.log("Prompt:", prompt);
     if (streaming) {
         const stream = model.stream(prompt);
         // Save the conversation after streaming starts
