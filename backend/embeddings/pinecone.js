@@ -4,13 +4,12 @@ const { Pinecone } = require("@pinecone-database/pinecone");
 const { GoogleGenerativeAIEmbeddings } = require("@langchain/google-genai");
 
 const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
-const index = pinecone.Index(process.env.PINECONE_INDEX_NAME) ?? "langchain-project-index";
+const index = pinecone.Index(process.env.PINECONE_INDEX_NAME);
 
 async function createIndexIfNotExists() {
     try {
         const indexes = await pinecone.listIndexes();
-        // console.log("index", index);
-        console.log(indexes.indexes)
+        console.log("Available indexes", indexes.indexes)
         const indexExists = indexes.indexes.some(
             (pineconeIdx) => pineconeIdx.name === process.env.PINECONE_INDEX_NAME
         );
@@ -18,7 +17,7 @@ async function createIndexIfNotExists() {
         if (!indexExists) {
             console.log(`Creating index "${index}"...`);
             await pinecone.createIndex({
-                name: index,
+                name: indexes?.indexes?.[0]?.['name'] ?? "langchain-project-index",
                 dimension: 768,
                 metric: "cosine",
                 spec: {
@@ -28,9 +27,9 @@ async function createIndexIfNotExists() {
                     }
                 }
             });
-            console.log(`Index "${index}" created.`);
+            console.log(`Index: langchain-project-index created.`);
         } else {
-            console.log(`Index "${index}" already exists.`);
+            console.log(`Index: langchain-project-index already exists.`);
         }
     } catch (error) {
         console.error("Error creating Pinecone index:", error);
