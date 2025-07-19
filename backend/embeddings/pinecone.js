@@ -50,7 +50,7 @@ const embedAndStore = async (chunks, metadata = {}) => {
         chunks,
         metadata,
         embeddings,
-        { pineconeIndex: indexName }
+        { pineconeIndex: index }
     );
 };
 
