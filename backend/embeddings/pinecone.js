@@ -6,9 +6,8 @@ const { GoogleGenerativeAIEmbeddings } = require("@langchain/google-genai");
 const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
 const index = pinecone.Index(process.env.PINECONE_INDEX_NAME);
 
-async function createIndexIfNotExists() {
+async function createIndexIfNotExists(indexName) {
     try {
-        const indexName = "langchain-project-index";
         const indexes = await pinecone.listIndexes();
         console.log("Available indexes", indexes.indexes)
         const indexExists = indexes.indexes.some(
@@ -44,13 +43,14 @@ const embedAndStore = async (chunks, metadata = {}) => {
         title: "Embeddings for " + metadata.title
     });
 
-    await createIndexIfNotExists();
+    const indexName = "langchain-project-index";
+    await createIndexIfNotExists(indexName);
 
     await PineconeStore.fromTexts(
         chunks,
         metadata,
         embeddings,
-        { pineconeIndex: index }
+        { pineconeIndex: indexName }
     );
 };
 
