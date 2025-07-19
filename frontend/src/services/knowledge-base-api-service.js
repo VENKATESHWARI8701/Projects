@@ -2,6 +2,7 @@ const API_URL = `${process.env.REACT_APP_BACKEND_URL}/api` ?? 'http://localhost:
 
 export const uploadFiles = async (files) => {
   try {
+    console.log("backend url",process.env.REACT_APP_BACKEND_URL);
     const formData = new FormData();
 
     // Append each file to the form data
