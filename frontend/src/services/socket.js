@@ -1,7 +1,8 @@
 import { io } from 'socket.io-client';
 
 // Create a socket instance
-const socket = io('http://localhost:5000', {
+const URL = process.env.REACT_APP_BACKEND_URL ?? 'http://localhost:5000';
+const socket = io(URL, {
   autoConnect: false,
   reconnection: true,
   reconnectionAttempts: 5,

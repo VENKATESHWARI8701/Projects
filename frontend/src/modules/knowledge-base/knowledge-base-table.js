@@ -23,11 +23,11 @@ const KnowledgeBaseTable = () => {
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
-    
+
     const getFileIcon = (fileName) => {
         const extension = fileName.toLowerCase().split('.').pop();
-        
-        switch(extension) {
+
+        switch (extension) {
             case 'pdf':
                 return <PdfIcon color="error" fontSize="small" />;
             case 'doc':
