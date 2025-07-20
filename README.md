@@ -2,6 +2,8 @@
 
 This project consists of a React frontend and Express backend for managing a knowledge base with AI-powered document Q&A capabilities.
 
+**Live Demo:** [https://projects-theta-ten.vercel.app/](https://projects-theta-ten.vercel.app/)
+
 ## Project Structure
 
 ```
@@ -55,4 +57,14 @@ The backend is an Express server that:
 - Handles file uploads
 - Extracts text from multiple file formats (PDF, DOC/DOCX, HTML/HTM, TEXT)
 - Embeds document content using Google's Gemini API
-- Stores embeddings in the Pinecone vector database
+- Stores embeddings in Pinecone vector database
+
+## Deployment
+
+### Frontend
+The frontend is deployed on Vercel at [https://projects-theta-ten.vercel.app/](https://projects-theta-ten.vercel.app/)
+
+### Backend
+The backend is deployed on Render, which provides:
+- Automatic deployments from GitHub
+- Environment variable management
