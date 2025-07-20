@@ -14,7 +14,8 @@ import {
     Dialog,
     DialogActions,
     DialogContent,
-    DialogTitle
+    DialogTitle,
+    CircularProgress
 } from '@mui/material';
 import { Delete as DeleteIcon, Add as AddIcon, Refresh as RefreshIcon, PictureAsPdf as PdfIcon, Description as DocIcon, Code as HtmlIcon, InsertDriveFile as FileIcon } from '@mui/icons-material';
 import { useState, useEffect } from 'react';
@@ -29,7 +30,7 @@ const KnowledgeBaseTable = () => {
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
-    const [currentUploadingFile, setCurrentUploadingFile] = useState('');
+    const [uploadInfo, setUploadInfo] = useState({ count: 0, fileNames: '' });
     const [deleteConfirmation, setDeleteConfirmation] = useState({ open: false, file: null });
 
     const getFileIcon = (fileName) => {
@@ -63,7 +64,6 @@ const KnowledgeBaseTable = () => {
         try {
             setLoading(true);
             const response = await getFiles();
-            console.log(response);
             setFiles(response.files || []);
         } catch (error) {
             showAlert('Failed to fetch files', 'error');
@@ -75,15 +75,27 @@ const KnowledgeBaseTable = () => {
     const handleUpload = async ({ files: uploadedFiles }) => {
         try {
             setLoading(true);
-            setCurrentUploadingFile(uploadedFiles.map(file => file.name).join(', '))
+
+            // Format file names for display
+            const fileNames = uploadedFiles.map(file => file.name);
+            const displayText = uploadedFiles.length === 1
+                ? fileNames[0]
+                : `${fileNames.slice(0, 2).join(', ')}${fileNames.length > 2 ? `, +${fileNames.length - 2} more` : ''}`;
+
+            setUploadInfo({ count: uploadedFiles.length, fileNames: displayText });
             await uploadFiles(uploadedFiles);
-            showAlert('Files uploaded successfully', 'success');
+
+            const successMessage = uploadedFiles.length === 1
+                ? `File "${fileNames[0]}" uploaded successfully`
+                : `${uploadedFiles.length} files uploaded successfully`;
+
+            showAlert(successMessage, 'success');
             fetchFiles();
         } catch (error) {
-            setCurrentUploadingFile('');
+            setUploadInfo({ count: 0, fileNames: '' });
             showAlert('Failed to upload files', 'error');
         } finally {
-            setCurrentUploadingFile('');
+            setUploadInfo({ count: 0, fileNames: '' });
             setLoading(false);
         }
     };
@@ -98,13 +110,15 @@ const KnowledgeBaseTable = () => {
 
         try {
             setLoading(true);
+            setUploadInfo({ count: 1, fileNames: file.title });
             await deleteFile(file.title);
-            showAlert('File deleted successfully', 'success');
+            showAlert(`File "${file.title}" deleted successfully`, 'success');
             fetchFiles();
         } catch (error) {
             showAlert('Failed to delete file', 'error');
         } finally {
             setLoading(false);
+            setUploadInfo({ count: 0, fileNames: '' });
             setDeleteConfirmation({ open: false, file: null });
         }
     };
@@ -136,15 +150,17 @@ const KnowledgeBaseTable = () => {
                         </Box>
                         <Box sx={{ display: 'flex', gap: 2 }}>
                             <Tooltip title="Refresh files">
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    onClick={fetchFiles}
-                                    disabled={loading}
-                                    startIcon={<RefreshIcon />}
-                                >
-                                    Refresh
-                                </Button>
+                                <span>
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        onClick={fetchFiles}
+                                        disabled={loading}
+                                        startIcon={<RefreshIcon />}
+                                    >
+                                        Refresh
+                                    </Button>
+                                </span>
                             </Tooltip>
                             <Button
                                 variant="contained"
@@ -167,15 +183,32 @@ const KnowledgeBaseTable = () => {
             </Card>
 
             {loading && (
-                <Box sx={{ mb: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                        <Typography variant="body2" color="primary">
-                            Uploading: {currentUploadingFile}
-                        </Typography>
-                    </Box>
-                </Box>
+                <Fade in={loading}>
+                    <Paper elevation={0} sx={{ p: 2, mb: 2, borderRadius: 2, border: '1px solid rgba(25, 118, 210, 0.2)', bgcolor: 'rgba(25, 118, 210, 0.05)' }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Typography variant="subtitle2" color="primary" fontWeight="600">
+                                    {deleteConfirmation.open ? "Deleting File" : `Processing ${uploadInfo.count} ${uploadInfo.count === 1 ? 'File' : 'Files'}`}
+                                </Typography>
+                                <Chip
+                                    label={deleteConfirmation.open ? "Deleting" : "Uploading"}
+                                    color="primary"
+                                    size="small"
+                                    variant="outlined"
+                                />
+                            </Box>
+                            <LinearProgress sx={{ borderRadius: 1, height: 6 }} />
+                            {uploadInfo.fileNames && (
+                                <Box sx={{ mt: 0.5 }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        <strong>{deleteConfirmation.open ? "File:" : "Files:"}</strong> {uploadInfo.fileNames}
+                                    </Typography>
+                                </Box>
+                            )}
+                        </Box>
+                    </Paper>
+                </Fade>
             )}
-            {loading && <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />}
 
             <Fade in={true} timeout={500}>
                 <TableContainer
@@ -209,7 +242,6 @@ const KnowledgeBaseTable = () => {
                                 <TableRow
                                     key={file.id}
                                     hover
-                                    sx={{ '&:hover': { bgcolor: 'rgba(58, 134, 255, 0.04)' } }}
                                 >
                                     <TableCell>{file.id}</TableCell>
                                     <TableCell>
@@ -224,11 +256,7 @@ const KnowledgeBaseTable = () => {
                                                 color="error"
                                                 onClick={() => confirmDelete(file)}
                                                 size="small"
-                                                sx={{
-                                                    '&:hover': {
-                                                        bgcolor: 'rgba(217, 4, 41, 0.1)'
-                                                    }
-                                                }}
+
                                             >
                                                 <DeleteIcon fontSize="small" />
                                             </IconButton>
@@ -318,7 +346,7 @@ const KnowledgeBaseTable = () => {
                         disableElevation
                         sx={{ borderRadius: 2 }}
                     >
-                        Delete
+                        {loading ? <CircularProgress color='inherit' size={"20px"}/> : 'Delete'}
                     </Button>
                 </DialogActions>
             </Dialog>

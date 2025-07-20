@@ -12,7 +12,7 @@ const index = pinecone.Index(indexName);
 // Initialize memory storage for chat history
 const chatMemories = {};
 
-const getAnswerFromModel = async (question, streaming = false, sessionId = 'default') => {
+const getAnswerFromModel = async (question, sessionId = 'default') => {
     console.log("Getting answer");
     // Initialize memory for this session if it doesn't exist
     if (!chatMemories[sessionId]) {
@@ -42,10 +42,20 @@ const getAnswerFromModel = async (question, streaming = false, sessionId = 'defa
     // 3. Get chat history
     const chatHistory = await chatMemories[sessionId].loadMemoryVariables({});
     const previousMessages = chatHistory.history || '';
-    console.log("Previous messages:", previousMessages);
     // 4. Construct prompt with retrieved context and chat history
-    const prompt = ` You are an AI assistant. You can answer any question. Use the following context and conversation history to answer the user's question. 
-    If you not understand the question then ask for clarification. Don't try to make up an answer.
+    const prompt = ` You are a helpful AI assistant specialized in analyzing and summarizing documents. Your primary tasks are:
+ 1. Providing clear and accurate summaries of uploaded documents
+ 2. Answering specific questions about the document content
+ 3. Maintaining a professional and friendly tone
+
+ When responding:
+ - Base your answers strictly on the provided context and document content
+ - If a question is unclear or ambiguous, answer with the context and politely ask for clarification
+ - If the answer cannot be found in the document context, honestly acknowledge this
+ - Provide relevant quotes or references from the document when applicable
+ - Keep responses concise but informative
+
+ Use the following context and conversation history to assist the user:
 
         Context:
         ${relevantChunks || 'No relevant context found.'}
@@ -63,21 +73,8 @@ const getAnswerFromModel = async (question, streaming = false, sessionId = 'defa
     });
 
     console.log("Prompt:", prompt);
-    if (streaming) {
-        const stream = model.stream(prompt);
-        // Save the conversation after streaming starts
-        saveConversation(sessionId, question, 'Streaming response...');
-        return stream;
-    } else {
-        const stream = await model.stream(prompt);
-        let fullResponse = '';
-        for await (const chunk of stream) {
-            fullResponse += chunk.content;
-        }
-        // Save the conversation
-        saveConversation(sessionId, question, fullResponse);
-        return fullResponse;
-    }
+    const stream = model.stream(prompt);
+    return stream;
 };
 
 // Helper function to save conversation to memory
@@ -93,4 +90,4 @@ const saveConversation = async (sessionId, question, answer) => {
 };
 
 
-module.exports = { getAnswerFromModel };
+module.exports = { getAnswerFromModel, saveConversation };

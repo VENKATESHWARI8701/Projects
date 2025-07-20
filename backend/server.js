@@ -1,16 +1,14 @@
 const express = require('express');
 const cors = require('cors');
-const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const { Server } = require('socket.io');
-const pdfParse = require('pdf-parse');
 const upload = require("./multer-upload");
 const extractText = require("./chunking/extract-text");
 const splitText = require("./chunking/chunk");
 const { embedAndStore, deleteFromPinecone } = require("./embeddings/pinecone");
-const { getAnswerFromModel, clearChatHistory } = require('./retrieval/retrieval');
+const { getAnswerFromModel, saveConversation } = require('./retrieval/retrieval');
 
 // Create Express app
 const app = express();
@@ -95,7 +93,6 @@ app.get('/api/files', (req, res) => {
 app.delete('/api/files/:id', async (req, res) => {
   try {
     const fileId = req.params.id;
-    console.log(fileId)
     await deleteFromPinecone(fileId);
     fs.unlink(`./uploads/${fileId}`, (err) => {
       if (err) {
@@ -116,7 +113,7 @@ app.post("/api/ask", async (req, res) => {
 
   try {
     // For non-streaming responses with chat history
-    const answer = await getAnswerFromModel(question, false, sessionId);
+    const answer = await getAnswerFromModel(question, sessionId);
     return res.json({ answer });
   } catch (error) {
     console.error('Error getting answer:', error);
@@ -138,24 +135,58 @@ io.on('connection', (socket) => {
   // Use socket ID as session ID for chat history
   const sessionId = socket.id;
 
-  socket.on('ask-question', async (question) => {
-    console.log('Question received:', question);
+  // Handle disconnection
+  socket.on('disconnect', (reason) => {
+    console.log(`Client ${socket.id} disconnected: ${reason}`);
+  });
+
+  socket.on('ask-question', async (question, callback) => {
+    console.log('Question received from client', socket.id, ':', question);
+
+    // Send acknowledgment if callback is provided
+    if (typeof callback === 'function') {
+      callback({ status: 'received' });
+    }
 
     try {
       // Get streaming response from the LLM model with session ID
-      const stream = await getAnswerFromModel(question, true, sessionId);
+      const stream = await getAnswerFromModel(question, sessionId);
+      console.log('Stream obtained, starting to process chunks');
+
+      // Variable to collect the full response
+      let fullResponse = '';
+
       // Process each chunk from the stream
       for await (const chunk of stream) {
         if (chunk.content) {
-          socket.emit('llm-response-chunk', { chunk: chunk.content });
+          // Collect the full response
+          fullResponse += chunk.content;
+
+          // Check if socket is still connected before emitting
+          if (socket.connected) {
+            socket.emit('llm-response-chunk', { chunk: chunk.content });
+            console.log('Sent chunk to client', socket.id);
+          } else {
+            console.log('Socket disconnected, stopping stream');
+            break;
+          }
         }
       }
 
-      // Signal that the response is complete
-      socket.emit('llm-response-complete');
+      // Save the complete conversation after streaming finishes
+      await saveConversation(sessionId, question, fullResponse);
+      console.log('Saved conversation with full response for session', sessionId);
+
+      // Signal that the response is complete if socket is still connected
+      if (socket.connected) {
+        socket.emit('llm-response-complete');
+        console.log('Response complete for client', socket.id);
+      }
     } catch (error) {
-      console.error('Error streaming response:', error);
-      socket.emit('llm-error', { error: error.message || 'Unknown error occurred' });
+      console.error('Error streaming response for client', socket.id, ':', error);
+      if (socket.connected) {
+        socket.emit('llm-error', { error: error.message || 'Unknown error occurred' });
+      }
     }
   });
 });
