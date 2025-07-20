@@ -46,7 +46,7 @@ npm run dev
 ## Frontend
 
 The frontend is a React application that allows users to:
-- Upload documents (PDF, DOC/DOCX, HTML/HTM) to the knowledge base
+- Upload documents (PDF, DOC/DOCX, HTML/HTM, text) to the knowledge base
 - View all files in the knowledge base
 - Delete files from the knowledge base
 - Chat with an AI assistant that can answer questions based on the uploaded documents
@@ -55,7 +55,7 @@ The frontend is a React application that allows users to:
 
 The backend is an Express server that:
 - Handles file uploads
-- Extracts text from multiple file formats (PDF, DOC/DOCX, HTML/HTM)
+- Extracts text from multiple file formats (PDF, DOC/DOCX, HTML/HTM, TEXT)
 - Embeds document content using Google's Gemini API
 - Stores embeddings in Pinecone vector database
 
