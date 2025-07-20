@@ -29,6 +29,7 @@ const KnowledgeBaseTable = () => {
     const [openDialog, setOpenDialog] = useState(false);
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [isFetching, setIsFetching] = useState(false);
     const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
     const [uploadInfo, setUploadInfo] = useState({ count: 0, fileNames: '' });
     const [deleteConfirmation, setDeleteConfirmation] = useState({ open: false, file: null });
@@ -62,13 +63,13 @@ const KnowledgeBaseTable = () => {
 
     const fetchFiles = async () => {
         try {
-            setLoading(true);
+            setIsFetching(true);
             const response = await getFiles();
             setFiles(response.files || []);
         } catch (error) {
             showAlert('Failed to fetch files', 'error');
         } finally {
-            setLoading(false);
+            setIsFetching(false);
         }
     };
 
@@ -238,32 +239,44 @@ const KnowledgeBaseTable = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {files?.length ? files?.map((file) => (
-                                <TableRow
-                                    key={file.id}
-                                    hover
-                                >
-                                    <TableCell>{file.id}</TableCell>
-                                    <TableCell>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            {getFileIcon(file.title)}
-                                            <Typography>{file.title}</Typography>
+                            {isFetching ? (
+                                <TableRow>
+                                    <TableCell colSpan={3} align="center" sx={{ py: 4 }}>
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, py: 3 }}>
+                                            <CircularProgress size={24} />
+                                            <Typography variant="body1" color="text.secondary">
+                                                Loading files...
+                                            </Typography>
                                         </Box>
                                     </TableCell>
-                                    <TableCell>
-                                        <Tooltip title="Delete file">
-                                            <IconButton
-                                                color="error"
-                                                onClick={() => confirmDelete(file)}
-                                                size="small"
-
-                                            >
-                                                <DeleteIcon fontSize="small" />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </TableCell>
                                 </TableRow>
-                            )) :
+                            ) : files?.length ? (
+                                files.map((file) => (
+                                    <TableRow
+                                        key={file.id}
+                                        hover
+                                    >
+                                        <TableCell>{file.id}</TableCell>
+                                        <TableCell>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                {getFileIcon(file.title)}
+                                                <Typography>{file.title}</Typography>
+                                            </Box>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Tooltip title="Delete file">
+                                                <IconButton
+                                                    color="error"
+                                                    onClick={() => confirmDelete(file)}
+                                                    size="small"
+                                                >
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
                                 <TableRow>
                                     <TableCell colSpan={3} align="center" sx={{ py: 4 }}>
                                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, py: 3 }}>
@@ -284,7 +297,7 @@ const KnowledgeBaseTable = () => {
                                         </Box>
                                     </TableCell>
                                 </TableRow>
-                            }
+                            )}
                         </TableBody>
                     </Table>
                 </TableContainer>
@@ -346,7 +359,7 @@ const KnowledgeBaseTable = () => {
                         disableElevation
                         sx={{ borderRadius: 2 }}
                     >
-                        {loading ? <CircularProgress color='inherit' size={"20px"}/> : 'Delete'}
+                        {loading ? <CircularProgress color='inherit' size={"20px"} /> : 'Delete'}
                     </Button>
                 </DialogActions>
             </Dialog>
