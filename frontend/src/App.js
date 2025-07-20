@@ -61,11 +61,9 @@ function App() {
           </Toolbar>
         </AppBar>
 
-      <Container maxWidth="xl" className="main-content">
         <Paper elevation={0} className="content-container">
           {currentView === 'knowledgeBaseTable' ? <KnowledgeBaseTable /> : <ChatInterface />}
         </Paper>
-      </Container>
     </Box>
     </ThemeProvider>
   );

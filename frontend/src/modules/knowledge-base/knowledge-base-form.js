@@ -80,15 +80,9 @@ const KnowledgeBaseForm = ({ open, onClose, onUpload }) => {
             onClose={onClose}
             maxWidth="sm"
             fullWidth
-            slotProps={{
-                elevation: 0,
-                sx: { borderRadius: 3 }
-            }}
-            slots={{ transition: Slide }}
-            transitionProps={{ direction: 'up' }}
         >
             <DialogTitle sx={{ pb: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6" fontWeight="600" color="primary">
+                <Typography component="div" variant="h6" fontWeight="600" color="primary">
                     Upload Files to Knowledge Base
                 </Typography>
                 <IconButton onClick={onClose} size="small" sx={{ color: 'text.secondary' }}>
@@ -121,7 +115,7 @@ const KnowledgeBaseForm = ({ open, onClose, onUpload }) => {
                     >
                         <input {...getInputProps()} />
                         <CloudUploadIcon fontSize="large" color="primary" sx={{ fontSize: 48, mb: 2 }} />
-                        <Typography variant="h6" sx={{ mb: 1 }}>
+                        <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 1 }}>
                             Drag & Drop Files
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
@@ -144,10 +138,25 @@ const KnowledgeBaseForm = ({ open, onClose, onUpload }) => {
                 {selectedFiles?.length > 0 && (
                     <Fade in={true}>
                         <Box mt={3}>
-                            <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 1 }}>
-                                Selected files ({selectedFiles.length})
-                            </Typography>
-                            <Paper variant="outlined" sx={{ borderRadius: 2, maxHeight: 200, overflow: 'auto' }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                <Typography variant="subtitle1" fontWeight="600">
+                                    Selected files
+                                </Typography>
+                                <Chip
+                                    label={`${selectedFiles.length} ${selectedFiles.length === 1 ? 'file' : 'files'}`}
+                                    color="primary"
+                                    size="small"
+                                    variant="outlined"
+                                />
+                            </Box>
+                            <Paper
+                                variant="outlined"
+                                sx={{
+                                    borderRadius: 2,
+                                    maxHeight: 200,
+                                    overflow: 'auto',
+                                }}
+                            >
                                 <List dense>
                                     {selectedFiles.map((file, index) => (
                                         <React.Fragment key={index}>
@@ -169,8 +178,24 @@ const KnowledgeBaseForm = ({ open, onClose, onUpload }) => {
                                                     {getFileIcon(file.name)}
                                                 </ListItemIcon>
                                                 <ListItemText
-                                                    primary={file.name}
-                                                    secondary={`${(file.size / 1024).toFixed(1)} KB`}
+                                                    primary={
+                                                        <Typography
+                                                            variant="body2"
+                                                            sx={{
+                                                                fontWeight: 500,
+                                                                overflow: 'hidden',
+                                                                whiteSpace: 'nowrap',
+                                                                maxWidth: '180px'
+                                                            }}
+                                                        >
+                                                            {file.name}
+                                                        </Typography>
+                                                    }
+                                                    secondary={
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {`${(file.size / 1024).toFixed(1)} KB`}
+                                                        </Typography>
+                                                    }
                                                 />
                                             </ListItem>
                                         </React.Fragment>

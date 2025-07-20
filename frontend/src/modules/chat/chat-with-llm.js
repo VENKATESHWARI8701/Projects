@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { addMessage, updateLastAiMessage, clearMessages } from "../../redux/chat-history-slice";
+import { addMessage, updateLastAiMessage } from "../../redux/chat-history-slice";
 import {
   Box,
   TextField,
@@ -18,7 +18,6 @@ import {
   Chip
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
-import DeleteIcon from '@mui/icons-material/Delete';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
 import ReactMarkDown from "react-markdown";
@@ -60,7 +59,7 @@ const ChatInterface = () => {
     setCurrentResponse("");
 
     // Add an empty assistant message that will be updated with streaming content
-    dispatch(addMessage({ role: "ai", text: "" }));
+    dispatch(addMessage({ role: "ai", text: "Thinking..." }));
 
     // Ask question and handle streaming response
     askQuestion(
@@ -106,11 +105,9 @@ const ChatInterface = () => {
 
       <Box
         sx={{
-          height: '65vh',
+          height: '73vh',
           display: 'flex',
           flexDirection: 'column',
-          border: '1px solid rgba(0, 0, 0, 0.08)',
-          overflow: 'hidden'
         }}
       >
         <Box

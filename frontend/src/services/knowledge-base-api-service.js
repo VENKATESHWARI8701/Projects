@@ -2,7 +2,6 @@ const API_URL = process.env.REACT_APP_BACKEND_URL
   ? `${process.env.REACT_APP_BACKEND_URL}/api`
   : 'http://localhost:5000/api';
 
-console.log("backend url", process.env.REACT_APP_BACKEND_URL);
 export const uploadFiles = async (files) => {
   try {
     const formData = new FormData();
